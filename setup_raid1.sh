@@ -56,17 +56,23 @@ get_username() {
 prepare_devices() {
     echo "Preparing devices $DEV1 and $DEV2..."
     for DEV in "$DEV1" "$DEV2"; do
-        echo "Formatting $DEV..."
-        mkfs.ext4 "$DEV" || {
-            echo "Error: Failed to format $DEV. Exiting."
+        echo "Attempting to format $DEV..."
+        if [[ -b "$DEV" ]]; then
+            mkfs.ext4 "$DEV" || {
+                echo "Error: Failed to format $DEV. Exiting."
+                exit 1
+            }
+            echo "Clearing RAID metadata on $DEV..."
+            mdadm --zero-superblock "$DEV" || {
+                echo "Error: Failed to clear RAID metadata on $DEV."
+            }
+        else
+            echo "Error: $DEV is not a valid block device."
             exit 1
-        }
-        echo "Clearing RAID metadata on $DEV..."
-        mdadm --zero-superblock "$DEV" || {
-            echo "Error: Failed to clear RAID metadata on $DEV."
-        }
+        fi
     done
 }
+
 
 create_raid() {
     if [ -e "$RAID_DEVICE" ]; then
@@ -79,11 +85,6 @@ create_raid() {
         echo "Error: Failed to create RAID array. Exiting."
         exit 1
     }
-}
-
-check_raid_status() {
-    echo "Checking RAID status..."
-    cat /proc/mdstat || echo "Error: Could not read RAID status."
 }
 
 save_raid_config() {
@@ -156,7 +157,6 @@ get_devices
 get_username
 prepare_devices
 create_raid
-check_raid_status
 save_raid_config
 update_initramfs
 format_raid_device
