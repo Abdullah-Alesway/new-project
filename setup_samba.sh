@@ -27,24 +27,6 @@ echo "Setting permissions for the shared folder..."
 chown -R nobody:nobody "$SHARED_FOLDER"
 chmod -R 0775 "$SHARED_FOLDER"
 
-echo "Backing up the existing Samba configuration..."
-cp /etc/samba/smb.conf /etc/samba/smb.conf.bak
-
-echo "Configuring Samba shared folder in smb.conf..."
-cat <<EOF >> /etc/samba/smb.conf
-
-[$(basename "$SHARED_FOLDER")]
-   path = $SHARED_FOLDER
-   browseable = yes
-   writable = yes
-   guest ok = no
-   read only = no
-   valid users = $SAMBA_USER
-   create mask = 0664
-   directory mask = 0775
-EOF
-
-
 read -p "Enter the Samba username to grant access (e.g., nvruser): " SAMBA_USER
 
 if [ -z "$SAMBA_USER" ]; then
@@ -74,6 +56,22 @@ else
     fi
 fi
 
+echo "Backing up the existing Samba configuration..."
+cp /etc/samba/smb.conf /etc/samba/smb.conf.bak
+
+echo "Configuring Samba shared folder in smb.conf..."
+cat <<EOF >> /etc/samba/smb.conf
+
+[$(basename "$SHARED_FOLDER")]
+   path = $SHARED_FOLDER
+   browseable = yes
+   writable = yes
+   guest ok = no
+   read only = no
+   valid users = $SAMBA_USER
+   create mask = 0664
+   directory mask = 0775
+EOF
 
 echo "Setting SELinux booleans for Samba..."
 setsebool -P samba_enable_home_dirs on
@@ -84,4 +82,3 @@ systemctl restart smb
 systemctl restart nmb
 
 echo "Samba file sharing setup completed!"
-
