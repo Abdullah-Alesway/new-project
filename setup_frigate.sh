@@ -47,12 +47,13 @@ Network=host
 Environment=FRIGATE_RTSP_PASSWORD="password"
 Environment=FRIGATE_MQTT_USER="user"
 Environment=FRIGATE_MQTT_PASSWORD="pass"
-Volume=/var/frigate/media:/media
-Volume=/var/frigate/config:/config
+Volume=/var/frigate/media:/media:Z
+Volume=/var/frigate/config:/config:Z
 Volume=/etc/localtime:/etc/localtime:ro
 Mount=type=tmpfs,target=/tmp/cache,tmpfs-size=1000000000
-ShmSize=64m
+ShmSize=128m
 Image=ghcr.io/blakeblackshear/frigate:stable
+AutoUpdate=registry
 
 [Service]
 Restart=always
